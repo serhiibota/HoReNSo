@@ -1,0 +1,113 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-top: env(safe-area-inset-top, 0px);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+    background: #f7f5f0;
+  }
+
+  body {
+    min-height: 100vh;
+    @apply bg-ivory font-sans text-ink antialiased;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: 'kern', 'liga';
+    overscroll-behavior-y: none;
+  }
+
+  /*
+   * Старый Safari: 100vh включает область под нижней панелью браузера.
+   * -webkit-fill-available даёт реальную видимую высоту. dvh появился
+   * только в Safari 15.4, поэтому 15.0–15.3 без этого хака «прыгают».
+   */
+  @supports (-webkit-touch-callout: none) {
+    html {
+      height: -webkit-fill-available;
+    }
+    body {
+      min-height: -webkit-fill-available;
+    }
+  }
+
+  /* iOS зумит страницу при фокусе на поле с шрифтом < 16px */
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+  }
+
+  button {
+    touch-action: manipulation;
+  }
+
+  ::selection {
+    background: #e8dfcf;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-xl2 bg-paper shadow-card;
+  }
+
+  .eyebrow {
+    @apply text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-faint;
+  }
+
+  /* Слой на GPU: только для элементов, которые реально анимируются */
+  .gpu {
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+  }
+
+  .pb-safe {
+    padding-bottom: var(--safe-bottom);
+  }
+
+  /* Отступ под ФАБ / нижнюю панель, чтобы контент не прятался */
+  .pb-bar {
+    padding-bottom: calc(7rem + var(--safe-bottom));
+  }
+
+  .pressable {
+    transition: transform 160ms ease, opacity 160ms ease;
+  }
+  .pressable:active {
+    -webkit-transform: scale(0.97);
+    transform: scale(0.97);
+  }
+
+  /* Появление через opacity + transform — дёшево для композитора */
+  .fade-up {
+    animation: fadeUp 420ms cubic-bezier(0.32, 0.72, 0, 1) both;
+  }
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    transition-duration: 1ms !important;
+  }
+}
