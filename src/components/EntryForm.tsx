@@ -99,7 +99,10 @@ export function EntryForm({ editId }: { editId: string | null }) {
 
   const save = () => {
     const id = saveDraft();
-    if (id) router.replace(`/entry?id=${id}`);
+    if (!id) return;
+    // Из карточки решения — назад на неё; новая запись — открыть карточку
+    if (editId) goBack(router);
+    else router.replace(`/entry?id=${id}`);
   };
 
   const cancel = () => {
@@ -120,7 +123,7 @@ export function EntryForm({ editId }: { editId: string | null }) {
             <IconBack />
           </IconButton>
         }
-        title={editId ? 'Редактирование' : 'Новая запись'}
+        title={editId ? 'Факт или вывод' : 'Новая запись'}
         right={
           <IconButton label="Как это работает" onClick={() => setHelpOpen(true)} className="-mr-2">
             <IconQuestion />

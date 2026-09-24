@@ -1,6 +1,7 @@
 'use client';
 
 import { COMM_META, COMM_ORDER } from '@/lib/fields';
+import { TOOLS } from '@/lib/tools';
 import { BottomSheet } from './BottomSheet';
 
 const HABITS = [
@@ -23,7 +24,7 @@ export function HelpSheet({ open, onClose }: { open: boolean; onClose: () => voi
   return (
     <BottomSheet open={open} onClose={onClose} title="Хо-Рен-Со">
       <p className="text-[15px] leading-relaxed text-ink-soft">
-        Японский принцип осознанной коммуникации: вовремя сообщать, информировать и советоваться.
+        Простые инструменты для решений. Хо-Рен-Со — японское правило рабочей коммуникации — помогает сообщить принятое решение: вовремя доложить, информировать и посоветоваться.
       </p>
 
       <div className="mt-6 space-y-3">
@@ -43,20 +44,21 @@ export function HelpSheet({ open, onClose }: { open: boolean; onClose: () => voi
         })}
       </div>
 
-      <h3 className="eyebrow mt-8">Самопроверка — для себя</h3>
-      <p className="mt-3 text-[15px] leading-relaxed">
-        Хо-Рен-Со — правило рабочей коммуникации. Но прежде чем говорить, полезно проверить себя: что я
-        действительно видел, а что додумал.
-      </p>
-      <ul className="mt-3 space-y-2 text-[15px] leading-relaxed text-ink-soft">
-        <li>— В фактах подсвечиваются слова-выводы: «всегда», «специально», «очевидно».</li>
-        <li>— Моя версия — одна из возможных: назовите хотя бы две другие.</li>
-        <li>— Эмоция окрашивает восприятие — назовите её.</li>
-        <li>— Оцените уверенность и решите, как проверить версию.</li>
-        <li>— Отметьте итог: подтвердилось, не подтвердилось или пока неясно.</li>
+      <h3 className="eyebrow mt-8">Инструменты решения</h3>
+      <ul className="mt-3 divide-y divide-line">
+        {TOOLS.map((t) => (
+          <li key={t.id} className="py-3">
+            <div className="text-[15px] font-semibold">{t.name}</div>
+            <div className="mt-0.5 text-[14px] leading-snug text-ink-soft">{t.question}</div>
+            <div className="mt-0.5 text-[13px] leading-snug text-ink-faint">Когда: {t.when.toLowerCase()}</div>
+          </li>
+        ))}
       </ul>
-      <p className="mt-3 text-[15px] leading-relaxed text-ink-soft">
-        Если после проверки понятно, что нужно кому-то сказать, — «Сказать команде» переведёт запись в Хо-Рен-Со.
+
+      <h3 className="eyebrow mt-8">Пересмотр</h3>
+      <p className="mt-3 text-[15px] leading-relaxed">
+        Назначьте дату — приложение напомнит при открытии. Оцените отдельно решение и результат: хорошее решение может
+        не повезти, а удачный исход — оказаться случайностью.
       </p>
 
       <h3 className="eyebrow mt-8">Сделай это привычкой</h3>

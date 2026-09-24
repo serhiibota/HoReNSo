@@ -5,7 +5,7 @@ import { useMemo, useState } from 'react';
 import { STATUS_META, STATUS_ORDER } from '@/lib/fields';
 import { firstLine } from '@/lib/format';
 import type { EntryStatus } from '@/lib/types';
-import { isDraftEmpty, useEntries } from '@/store/entries';
+import { isDraftEmpty, isReviewDue, useEntries } from '@/store/entries';
 import { useHydrated } from '@/store/useHydrated';
 import { EntryCard } from './EntryCard';
 import { Fab } from './Fab';
@@ -14,7 +14,7 @@ import { IconQuestion, IconSettings } from './icons';
 import { SettingsSheet } from './SettingsSheet';
 import { IconButton } from './TopBar';
 
-type Filter = 'all' | 'self' | EntryStatus;
+type Filter = 'all' | 'review' | EntryStatus;
 
 export function Feed() {
   const hydrated = useHydrated();
@@ -25,18 +25,21 @@ export function Feed() {
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   const counts = useMemo(() => {
-    // Статусы — только у записей Хо-Рен-Со; самопроверки считаются отдельно
-    const c: Record<EntryStatus | 'self', number> = { open: 0, acting: 0, done: 0, self: 0 };
-    entries.forEach((e) => (e.mode === 'self' ? c.self++ : c[e.status]++));
+    // Статусы решений и отдельно — сколько решений ждут пересмотра
+    const c: Record<EntryStatus | 'review', number> = { open: 0, acting: 0, done: 0, review: 0 };
+    entries.forEach((e) => {
+      c[e.status]++;
+      if (isReviewDue(e)) c.review++;
+    });
     return c;
   }, [entries]);
 
   const visible =
     filter === 'all'
       ? entries
-      : filter === 'self'
-        ? entries.filter((e) => e.mode === 'self')
-        : entries.filter((e) => e.mode === 'team' && e.status === filter);
+      : filter === 'review'
+        ? entries.filter((e) => isReviewDue(e))
+        : entries.filter((e) => e.status === filter);
   const hasDraft = hydrated && draft.editingId === null && !isDraftEmpty(draft);
 
   return (
@@ -47,7 +50,7 @@ export function Feed() {
             <div className="eyebrow">報 · 連 · 相</div>
             <h1 className="mt-2 font-serif text-[40px] leading-none">Хо-Рен-Со</h1>
             <p className="mt-3 max-w-xs text-[15px] leading-relaxed text-ink-soft">
-              Вижу → думаю → проверяю себя или говорю команде.
+              Взвесить решение, принять, вернуться и честно оценить.
             </p>
           </div>
           <div className="-mr-2 mt-1 flex gap-2">
@@ -66,9 +69,9 @@ export function Feed() {
               <Chip active={filter === 'all'} onClick={() => setFilter('all')}>
                 Все <span className="text-ink-faint">{entries.length}</span>
               </Chip>
-              {counts.self > 0 && (
-                <Chip active={filter === 'self'} onClick={() => setFilter('self')}>
-                  Для себя <span className="text-ink-faint">{counts.self}</span>
+              {counts.review > 0 && (
+                <Chip active={filter === 'review'} onClick={() => setFilter('review')}>
+                  Пересмотреть <span className="text-ink-faint">{counts.review}</span>
                 </Chip>
               )}
               {STATUS_ORDER.map((s) => (
@@ -113,7 +116,7 @@ export function Feed() {
         )}
       </main>
 
-      <Fab href="/new" />
+      <Fab href="/decide" />
       <HelpSheet open={helpOpen} onClose={() => setHelpOpen(false)} />
       <SettingsSheet open={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </div>
@@ -139,13 +142,13 @@ function EmptyState() {
   return (
     <div className="card fade-up mt-2 px-6 py-10 text-center">
       <div className="font-serif text-[44px] leading-none text-ink-faint">相</div>
-      <h2 className="mt-4 font-serif text-[24px]">Первая запись</h2>
+      <h2 className="mt-4 font-serif text-[24px]">Первое решение</h2>
       <p className="mx-auto mt-2 max-w-xs text-[15px] leading-relaxed text-ink-soft">
-        Опишите ситуацию: сначала факты, затем мысли. Для себя — проверьте свою версию; для команды — выберите,
-        как сообщить.
+        Сформулируйте вопрос и варианты. Потом — любые инструменты: за и против, 10/10/10, премортем. Через
+        время вернитесь и оцените, как вышло.
       </p>
       <Link
-        href="/new"
+        href="/decide"
         className="pressable mt-6 inline-flex h-12 items-center rounded-full bg-ink px-6 text-[15px] font-semibold text-ivory"
       >
         Начать

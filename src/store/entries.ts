@@ -5,7 +5,18 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 import { emptyFacts, emptySelf, emptyThoughts } from '@/lib/fields';
 import { hasText } from '@/lib/format';
 import { createId } from '@/lib/id';
-import type { CommType, Draft, Entry, EntryMode, EntryStatus, FactKey, SelfKey, ThoughtKey, Verdict } from '@/lib/types';
+import type {
+  CommType,
+  Draft,
+  Entry,
+  EntryMode,
+  EntryStatus,
+  FactKey,
+  SelfKey,
+  ThoughtKey,
+  Tools,
+  Verdict,
+} from '@/lib/types';
 
 interface EntriesState {
   entries: Entry[];
@@ -31,6 +42,12 @@ interface EntriesState {
   setConclusion: (id: string, text: string) => void;
   /** Мостик: самопроверка → Хо-Рен-Со, с сохранением фактов и мыслей */
   toTeam: (id: string) => void;
+
+  /** Новое решение: вопрос и варианты; инструменты заполняются потом */
+  createDecision: (question: string, options: string[]) => string;
+  /** Точечное обновление записи (решение, пересмотр) */
+  patchEntry: (id: string, fields: Partial<Entry>) => void;
+  setTool: <K extends keyof Tools>(id: string, key: K, value: Tools[K]) => void;
   remove: (id: string) => void;
 }
 
@@ -47,6 +64,23 @@ export const isDraftEmpty = (d: Draft) =>
   !Object.values(d.facts).some(hasText) &&
   !Object.values(d.thoughts).some(hasText) &&
   !Object.values(d.self).some(hasText);
+
+/** Поля решения по умолчанию — для новых записей и миграции старых */
+export const decisionDefaults = (): Pick<
+  Entry,
+  'question' | 'options' | 'choiceId' | 'decisionConfidence' | 'reviewAt' | 'review' | 'tools'
+> => ({
+  question: '',
+  options: [],
+  choiceId: null,
+  decisionConfidence: null,
+  reviewAt: null,
+  review: null,
+  tools: {},
+});
+
+/** Пора пересмотреть: дата наступила, а пересмотра ещё не было */
+export const isReviewDue = (e: Entry, now = Date.now()) => e.reviewAt !== null && e.reviewAt <= now && !e.review;
 
 const patch = (entries: Entry[], id: string, fn: (e: Entry) => Partial<Entry>) =>
   entries.map((e) => (e.id === id ? { ...e, ...fn(e), updatedAt: Date.now() } : e));
@@ -126,6 +160,7 @@ export const useEntries = create<EntriesState>()(
           confidence: draft.confidence,
           conclusion: '',
           verdict: 'unclear',
+          ...decisionDefaults(),
         };
         set({ entries: [entry, ...entries], draft: emptyDraft(draft.mode), lastMode: draft.mode });
         return entry.id;
@@ -138,6 +173,34 @@ export const useEntries = create<EntriesState>()(
       setVerdict: (id, verdict) => set((s) => ({ entries: patch(s.entries, id, () => ({ verdict })) })),
 
       setConclusion: (id, conclusion) => set((s) => ({ entries: patch(s.entries, id, () => ({ conclusion })) })),
+
+      createDecision: (question, options) => {
+        const now = Date.now();
+        const entry: Entry = {
+          id: createId(),
+          createdAt: now,
+          updatedAt: now,
+          mode: get().lastMode,
+          facts: emptyFacts(),
+          thoughts: emptyThoughts(),
+          status: 'open',
+          comms: [],
+          self: emptySelf(),
+          confidence: null,
+          conclusion: '',
+          verdict: 'unclear',
+          ...decisionDefaults(),
+          question: question.trim(),
+          options: options.map((text) => text.trim()).filter(Boolean).map((text) => ({ id: createId(), text })),
+        };
+        set((s) => ({ entries: [entry, ...s.entries] }));
+        return entry.id;
+      },
+
+      patchEntry: (id, fields) => set((s) => ({ entries: patch(s.entries, id, () => fields) })),
+
+      setTool: (id, key, value) =>
+        set((s) => ({ entries: patch(s.entries, id, (e) => ({ tools: { ...e.tools, [key]: value } })) })),
 
       toTeam: (id) => set((s) => ({ entries: patch(s.entries, id, () => ({ mode: 'team', status: 'open' })) })),
 
@@ -152,12 +215,13 @@ export const useEntries = create<EntriesState>()(
     }),
     {
       name: 'horenso:v1',
-      version: 2,
+      version: 3,
       storage: createJSONStorage(() => localStorage),
       partialize: (s) => ({ entries: s.entries, draft: s.draft, lastMode: s.lastMode }),
-      // v2: режим самопроверки. Старые записи — «для команды», новые поля пустые
+      // v2: режим самопроверки (старые записи — «для команды»).
+      // v3: решения и инструменты — у старых записей поля решения пустые.
       migrate: (persisted) => {
-        const p = (persisted ?? {}) as { entries?: Partial<Entry>[]; draft?: Partial<Draft> };
+        const p = (persisted ?? {}) as { entries?: Partial<Entry>[]; draft?: Partial<Draft>; lastMode?: EntryMode };
         const entries = (p.entries ?? []).map(
           (e) =>
             ({
@@ -166,11 +230,12 @@ export const useEntries = create<EntriesState>()(
               confidence: null,
               conclusion: '',
               verdict: 'unclear',
+              ...decisionDefaults(),
               ...e,
             }) as Entry,
         );
         const draft = { ...emptyDraft(), ...(p.draft ?? {}) } as Draft;
-        return { entries, draft, lastMode: 'team' } as unknown as EntriesState;
+        return { entries, draft, lastMode: p.lastMode ?? 'team' } as unknown as EntriesState;
       },
       // Гидрация вручную после монтирования — иначе расхождение SSR/клиент
       skipHydration: true,
