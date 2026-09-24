@@ -2,7 +2,7 @@
 
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
-import { DEFAULT_FONT, DEFAULT_THEME, PREFS_KEY, THEMES, type FontId, type ThemeId } from '@/lib/appearance';
+import { DEFAULT_FONT, DEFAULT_THEME, PREFS_KEY, THEMES, themeMeta, type FontId, type ThemeId } from '@/lib/appearance';
 
 interface PrefsState {
   theme: ThemeId;
@@ -33,7 +33,8 @@ export function applyAppearance(theme: ThemeId, font: FontId) {
   const root = document.documentElement;
   root.setAttribute('data-theme', theme);
   root.setAttribute('data-font', font);
-  const meta = THEMES.find((t) => t.id === theme)?.meta;
+  const def = THEMES.find((t) => t.id === theme);
+  const meta = def && themeMeta(def);
   const tag = document.querySelector('meta[name="theme-color"]');
   if (meta && tag) tag.setAttribute('content', meta);
 }

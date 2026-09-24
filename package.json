@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "npx serve out",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "check:colors": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-colors.mjs"
   },
   "browserslist": [
     "ios_saf >= 15",

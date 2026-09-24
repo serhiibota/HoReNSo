@@ -1,25 +1,13 @@
-export type ThemeId = 'ivory' | 'mist' | 'sakura' | 'matcha' | 'sumi';
+import { THEMES, type ThemeDef } from './themes';
+
+export { DEFAULT_THEME, THEMES, type ThemeDef, type ThemeId } from './themes';
+
 export type FontId = 'classic' | 'modern' | 'book' | 'system';
 
 export const PREFS_KEY = 'horenso:prefs';
 
-export interface ThemeDef {
-  id: ThemeId;
-  name: string;
-  note: string;
-  /** Цвет панели Safari (meta theme-color) */
-  meta: string;
-  /** Цвета для превью в настройках: фон, карточка, текст, акцент */
-  swatch: [string, string, string, string];
-}
-
-export const THEMES: ThemeDef[] = [
-  { id: 'ivory', name: 'Слоновая кость', note: 'Тёплая, по умолчанию', meta: '#F7F5F0', swatch: ['#F7F5F0', '#FFFFFF', '#2B2A28', '#C9A15B'] },
-  { id: 'mist', name: 'Туман', note: 'Светло-серая', meta: '#F2F3F5', swatch: ['#F2F3F5', '#FFFFFF', '#22252A', '#6C84A6'] },
-  { id: 'sakura', name: 'Сакура', note: 'Пудровая', meta: '#FAF4F3', swatch: ['#FAF4F3', '#FFFFFF', '#34282A', '#BE7A80'] },
-  { id: 'matcha', name: 'Маття', note: 'Мягкая зелёная', meta: '#F3F5EE', swatch: ['#F3F5EE', '#FFFFFD', '#262C24', '#6C9672'] },
-  { id: 'sumi', name: 'Сумиэ', note: 'Тёмная', meta: '#181716', swatch: ['#181716', '#232220', '#ECE8E1', '#CEA865'] },
-];
+/** Цвет панели Safari (meta theme-color) — фон схемы */
+export const themeMeta = (t: ThemeDef) => t.base.bg;
 
 export interface FontDef {
   id: FontId;
@@ -61,7 +49,6 @@ export const FONTS: FontDef[] = [
   },
 ];
 
-export const DEFAULT_THEME: ThemeId = 'ivory';
 export const DEFAULT_FONT: FontId = 'classic';
 
 /**
@@ -70,5 +57,5 @@ export const DEFAULT_FONT: FontId = 'classic';
  * что и zustand persist (формат { state: {...}, version }).
  */
 export const APPEARANCE_BOOT_SCRIPT = `(function(){try{var s=JSON.parse(localStorage.getItem('${PREFS_KEY}')||'{}').state||{};var d=document.documentElement;var m=${JSON.stringify(
-  Object.fromEntries(THEMES.map((t) => [t.id, t.meta])),
+  Object.fromEntries(THEMES.map((t) => [t.id, themeMeta(t)])),
 )};if(m[s.theme]){d.setAttribute('data-theme',s.theme);var e=document.querySelector('meta[name="theme-color"]');if(e)e.setAttribute('content',m[s.theme]);}if(s.font)d.setAttribute('data-font',s.font);}catch(e){}})();`;

@@ -1,6 +1,7 @@
 'use client';
 
 import { FONTS, THEMES } from '@/lib/appearance';
+import { COMM_ACCENTS } from '@/lib/themes';
 import { usePrefs } from '@/store/prefs';
 import { BottomSheet } from './BottomSheet';
 import { IconCheck } from './icons';
@@ -21,7 +22,7 @@ export function SettingsSheet({ open, onClose }: { open: boolean; onClose: () =>
       <div className="mt-3 grid grid-cols-2 gap-3">
         {THEMES.map((t) => {
           const active = t.id === theme;
-          const [bg, paper, ink, accent] = t.swatch;
+          const { bg, paper, ink } = t.base;
           return (
             <button
               key={t.id}
@@ -33,12 +34,16 @@ export function SettingsSheet({ open, onClose }: { open: boolean; onClose: () =>
                 (active ? 'ring-2 ring-ink' : 'ring-1 ring-line')
               }
             >
-              {/* Мини-превью: фон, карточка, строка текста, акцент */}
+              {/* Мини-превью: фон, карточка, строки текста и точки Хо/Рен/Со */}
               <span className="block rounded-xl p-2.5" style={{ background: bg }}>
                 <span className="block rounded-lg p-2" style={{ background: paper }}>
                   <span className="block h-1.5 w-3/4 rounded-full" style={{ background: ink }} />
                   <span className="mt-1.5 block h-1.5 w-1/2 rounded-full opacity-40" style={{ background: ink }} />
-                  <span className="mt-2 block h-1.5 w-5 rounded-full" style={{ background: accent }} />
+                  <span className="mt-2 flex gap-1">
+                    {COMM_ACCENTS.map((a) => (
+                      <span key={a} className="block h-1.5 w-1.5 rounded-full" style={{ background: t.accents[a] }} />
+                    ))}
+                  </span>
                 </span>
               </span>
               <span className="block px-1.5 pb-1 pt-2">

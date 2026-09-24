@@ -8,8 +8,8 @@ const config: Config = {
   content: ['./src/**/*.{ts,tsx}'],
   theme: {
     extend: {
-      // Все цвета — CSS-переменные (rgb-триплеты), значения задаются темой
-      // в globals.css. Формат `rgb(var(--x) / a)` понимает Safari 12.1+,
+      // Все цвета — CSS-переменные (rgb-триплеты), значения генерируются
+      // из src/lib/themes.ts (buildThemeCss). Формат `rgb(var(--x) / a)` понимает Safari 12.1+,
       // поэтому модификаторы прозрачности (bg-ink/30) продолжают работать.
       colors: {
         ivory: c('bg'),
@@ -18,13 +18,13 @@ const config: Config = {
         line: c('line'),
         mist: c('mist'),
         // Статусы решения
-        open: { DEFAULT: c('open'), tint: c('open-tint'), ink: c('open-ink') },
-        acting: { DEFAULT: c('acting'), tint: c('acting-tint'), ink: c('acting-ink') },
-        done: { DEFAULT: c('done'), tint: c('done-tint'), ink: c('done-ink') },
-        // Типы коммуникации Хо-Рен-Со
-        ho: { DEFAULT: c('ho'), tint: c('ho-tint') },
-        ren: { DEFAULT: c('ren'), tint: c('ren-tint') },
-        so: { DEFAULT: c('so'), tint: c('so-tint') },
+        open: { DEFAULT: c('open'), tint: c('open-tint'), ink: c('open-ink'), on: c('open-on') },
+        acting: { DEFAULT: c('acting'), tint: c('acting-tint'), ink: c('acting-ink'), on: c('acting-on') },
+        done: { DEFAULT: c('done'), tint: c('done-tint'), ink: c('done-ink'), on: c('done-on') },
+        // Типы коммуникации Хо-Рен-Со. На подложке *-tint текст/иконки — только *-ink
+        ho: { DEFAULT: c('ho'), tint: c('ho-tint'), ink: c('ho-ink'), on: c('ho-on') },
+        ren: { DEFAULT: c('ren'), tint: c('ren-tint'), ink: c('ren-ink'), on: c('ren-on') },
+        so: { DEFAULT: c('so'), tint: c('so-tint'), ink: c('so-ink'), on: c('so-on') },
       },
       fontFamily: {
         // Пара шрифтов выбирается в настройках (data-font на <html>)

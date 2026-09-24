@@ -95,7 +95,7 @@ export const COMM_META: Record<
     verb: 'Сообщить',
     description: 'Отчёт о прогрессе, результатах или проблемах',
     tint: 'bg-ho-tint',
-    text: 'text-ho',
+    text: 'text-ho-ink',
   },
   ren: {
     kanji: '連',
@@ -104,7 +104,7 @@ export const COMM_META: Record<
     verb: 'Информировать',
     description: 'Поделиться информацией, чтобы не было сюрпризов',
     tint: 'bg-ren-tint',
-    text: 'text-ren',
+    text: 'text-ren-ink',
   },
   so: {
     kanji: '相',
@@ -113,7 +113,7 @@ export const COMM_META: Record<
     verb: 'Посоветоваться',
     description: 'Запросить совет, когда нет уверенности',
     tint: 'bg-so-tint',
-    text: 'text-so',
+    text: 'text-so-ink',
   },
 };
 

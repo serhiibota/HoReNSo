@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Cormorant_Garamond, Manrope, PT_Sans, PT_Serif } from 'next/font/google';
 import { AppearanceSync } from '@/components/AppearanceSync';
 import { APPEARANCE_BOOT_SCRIPT } from '@/lib/appearance';
+import { buildThemeCss } from '@/lib/themes';
 import './globals.css';
 
 // Шрифты самохостятся next/font: без запросов к Google в рантайме,
@@ -68,6 +69,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     // data-theme/data-font ставит скрипт до гидрации — React об этом предупреждён
     <html lang="ru" className={fontVars} suppressHydrationWarning>
       <head>
+        {/* Цвета всех схем — из единого источника src/lib/themes.ts */}
+        <style dangerouslySetInnerHTML={{ __html: buildThemeCss() }} />
         <script dangerouslySetInnerHTML={{ __html: APPEARANCE_BOOT_SCRIPT }} />
       </head>
       <body>
