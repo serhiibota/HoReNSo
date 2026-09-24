@@ -15,9 +15,9 @@ export interface ThemeDef {
 
 export const THEMES: ThemeDef[] = [
   { id: 'ivory', name: 'Слоновая кость', note: 'Тёплая, по умолчанию', meta: '#F7F5F0', swatch: ['#F7F5F0', '#FFFFFF', '#2B2A28', '#C9A15B'] },
-  { id: 'mist', name: 'Туман', note: 'Светло-серая', meta: '#F2F3F5', swatch: ['#F2F3F5', '#FFFFFF', '#22252A', '#7F93AD'] },
-  { id: 'sakura', name: 'Сакура', note: 'Пудровая', meta: '#FAF4F3', swatch: ['#FAF4F3', '#FFFFFF', '#34282A', '#B08676'] },
-  { id: 'matcha', name: 'Маття', note: 'Мягкая зелёная', meta: '#F3F5EE', swatch: ['#F3F5EE', '#FFFFFD', '#262C24', '#7E9C88'] },
+  { id: 'mist', name: 'Туман', note: 'Светло-серая', meta: '#F2F3F5', swatch: ['#F2F3F5', '#FFFFFF', '#22252A', '#6C84A6'] },
+  { id: 'sakura', name: 'Сакура', note: 'Пудровая', meta: '#FAF4F3', swatch: ['#FAF4F3', '#FFFFFF', '#34282A', '#BE7A80'] },
+  { id: 'matcha', name: 'Маття', note: 'Мягкая зелёная', meta: '#F3F5EE', swatch: ['#F3F5EE', '#FFFFFD', '#262C24', '#6C9672'] },
   { id: 'sumi', name: 'Сумиэ', note: 'Тёмная', meta: '#181716', swatch: ['#181716', '#232220', '#ECE8E1', '#CEA865'] },
 ];
 
