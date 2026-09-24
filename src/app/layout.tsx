@@ -44,7 +44,14 @@ export const metadata: Metadata = {
   description: 'Блокнот для фиксации фактов, анализа и решений по принципу Хо-Рен-Со.',
   manifest: '/manifest.webmanifest',
   appleWebApp: { capable: true, title: 'Хо-Рен-Со', statusBarStyle: 'default' },
-  icons: { icon: '/icon.svg' },
+  icons: {
+    icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+    ],
+    // Квадратный PNG без прозрачности: iOS сама скругляет углы
+    apple: { url: '/apple-touch-icon.png', sizes: '180x180' },
+  },
   formatDetection: { telephone: false },
 };
 

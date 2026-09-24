@@ -71,12 +71,11 @@
 ```
 src/
 ├── app/
-│   ├── layout.tsx          # шрифты, viewport-fit=cover, метаданные PWA
+│   ├── layout.tsx          # шрифты, viewport-fit=cover, метаданные PWA и иконки
 │   ├── globals.css         # safe area, -webkit-fill-available, анимации
 │   ├── page.tsx            # лента
 │   ├── new/page.tsx        # создание / редактирование (?id=)
 │   ├── entry/page.tsx      # просмотр записи + Хо/Рен/Со (?id=)
-│   └── apple-icon.tsx      # PNG-иконка для «На экран Домой»
 ├── components/
 │   ├── EntryForm.tsx       # форма: вкладки Вижу/Думаю, свайп, нижняя кнопка
 │   ├── FieldList.tsx       # карточка-«страница блокнота» с полями
