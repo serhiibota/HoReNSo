@@ -10,7 +10,8 @@ import { useHydrated } from '@/store/useHydrated';
 import { EntryCard } from './EntryCard';
 import { Fab } from './Fab';
 import { HelpSheet } from './HelpSheet';
-import { IconQuestion } from './icons';
+import { IconQuestion, IconSettings } from './icons';
+import { SettingsSheet } from './SettingsSheet';
 import { IconButton } from './TopBar';
 
 type Filter = 'all' | EntryStatus;
@@ -21,6 +22,7 @@ export function Feed() {
   const draft = useEntries((s) => s.draft);
   const [filter, setFilter] = useState<Filter>('all');
   const [helpOpen, setHelpOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const counts = useMemo(() => {
     const c: Record<EntryStatus, number> = { open: 0, acting: 0, done: 0 };
@@ -42,9 +44,14 @@ export function Feed() {
               Вижу → думаю → решаю, как сказать.
             </p>
           </div>
-          <IconButton label="Как это работает" onClick={() => setHelpOpen(true)} className="-mr-2 mt-1 bg-paper shadow-card">
-            <IconQuestion />
-          </IconButton>
+          <div className="-mr-2 mt-1 flex gap-2">
+            <IconButton label="Оформление" onClick={() => setSettingsOpen(true)} className="bg-paper shadow-card">
+              <IconSettings />
+            </IconButton>
+            <IconButton label="Как это работает" onClick={() => setHelpOpen(true)} className="bg-paper shadow-card">
+              <IconQuestion />
+            </IconButton>
+          </div>
         </div>
 
         {hydrated && entries.length > 0 && (
@@ -97,6 +104,7 @@ export function Feed() {
 
       <Fab href="/new" />
       <HelpSheet open={helpOpen} onClose={() => setHelpOpen(false)} />
+      <SettingsSheet open={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </div>
   );
 }

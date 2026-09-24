@@ -50,3 +50,11 @@ export const IconCheck = () => (
     <path d="M5 12.5l4.5 4.5L19 7.5" />
   </svg>
 );
+
+export const IconSettings = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden {...base}>
+    <path d="M4 7h10M18 7h2M4 17h4M12 17h8" />
+    <circle cx="16" cy="7" r="2" />
+    <circle cx="10" cy="17" r="2" />
+  </svg>
+);

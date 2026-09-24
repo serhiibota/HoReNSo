@@ -82,7 +82,7 @@ export function BottomSheet({ open, onClose, title, children, footer }: Props) {
     <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label={title}>
       <div
         onClick={onClose}
-        className="absolute inset-0 bg-ink/30 transition-opacity ease-ios"
+        className="absolute inset-0 bg-black/30 transition-opacity ease-ios"
         style={{ opacity: shown ? 1 : 0, transitionDuration: `${DURATION}ms` }}
       />
       <div

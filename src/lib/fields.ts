@@ -77,9 +77,9 @@ export const emptyThoughts = (): Thoughts => ({
 });
 
 export const STATUS_META: Record<EntryStatus, { label: string; short: string; dot: string; tint: string; text: string }> = {
-  open: { label: 'Требует мер', short: 'Нужны меры', dot: 'bg-open', tint: 'bg-open-tint', text: 'text-[#8A6A2F]' },
-  acting: { label: 'Меры приняты', short: 'В работе', dot: 'bg-acting', tint: 'bg-acting-tint', text: 'text-[#4F627A]' },
-  done: { label: 'Есть результат', short: 'Результат', dot: 'bg-done', tint: 'bg-done-tint', text: 'text-[#4E6B58]' },
+  open: { label: 'Требует мер', short: 'Нужны меры', dot: 'bg-open', tint: 'bg-open-tint', text: 'text-open-ink' },
+  acting: { label: 'Меры приняты', short: 'В работе', dot: 'bg-acting', tint: 'bg-acting-tint', text: 'text-acting-ink' },
+  done: { label: 'Есть результат', short: 'Результат', dot: 'bg-done', tint: 'bg-done-tint', text: 'text-done-ink' },
 };
 
 export const STATUS_ORDER: EntryStatus[] = ['open', 'acting', 'done'];

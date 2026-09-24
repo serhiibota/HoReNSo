@@ -8,15 +8,148 @@
     --safe-top: env(safe-area-inset-top, 0px);
   }
 
+  /* ─── Цветовые схемы ───────────────────────────────────────────────
+     Значения — rgb-триплеты для Tailwind (`rgb(var(--c-x) / alpha)`).
+     Смена темы = смена атрибута data-theme на <html>: браузер лишь
+     перекрашивает, React ничего не перерисовывает. */
+
+  /* Слоновая кость — по умолчанию */
+  :root,
+  [data-theme='ivory'] {
+    --c-bg: 247 245 240;
+    --c-paper: 255 255 255;
+    --c-ink: 43 42 40;
+    --c-ink-soft: 101 98 92;
+    --c-ink-faint: 163 159 151;
+    --c-line: 233 229 221;
+    --c-mist: 240 237 230;
+    --c-shadow: 43 42 40;
+    --c-selection: 232 223 207;
+
+    --c-open: 201 161 91;
+    --c-open-tint: 246 239 223;
+    --c-open-ink: 138 106 47;
+    --c-acting: 127 147 173;
+    --c-acting-tint: 232 237 243;
+    --c-acting-ink: 79 98 122;
+    --c-done: 126 156 136;
+    --c-done-tint: 231 239 233;
+    --c-done-ink: 78 107 88;
+
+    --c-ho: 111 134 163;
+    --c-ho-tint: 234 239 245;
+    --c-ren: 126 156 136;
+    --c-ren-tint: 236 242 238;
+    --c-so: 176 134 118;
+    --c-so-tint: 245 236 232;
+  }
+
+  /* Туман — светло-серая, прохладная */
+  [data-theme='mist'] {
+    --c-bg: 242 243 245;
+    --c-paper: 255 255 255;
+    --c-ink: 34 37 42;
+    --c-ink-soft: 92 97 106;
+    --c-ink-faint: 150 155 164;
+    --c-line: 226 229 234;
+    --c-mist: 232 234 238;
+    --c-shadow: 30 36 48;
+    --c-selection: 214 222 234;
+  }
+
+  /* Сакура — пудрово-розовая */
+  [data-theme='sakura'] {
+    --c-bg: 250 244 243;
+    --c-paper: 255 255 255;
+    --c-ink: 52 40 42;
+    --c-ink-soft: 114 94 97;
+    --c-ink-faint: 172 152 155;
+    --c-line: 240 227 226;
+    --c-mist: 245 233 232;
+    --c-shadow: 70 40 44;
+    --c-selection: 242 214 214;
+  }
+
+  /* Маття — мягкая зелёная */
+  [data-theme='matcha'] {
+    --c-bg: 243 245 238;
+    --c-paper: 255 255 253;
+    --c-ink: 38 44 36;
+    --c-ink-soft: 94 104 91;
+    --c-ink-faint: 152 161 148;
+    --c-line: 225 231 219;
+    --c-mist: 233 238 227;
+    --c-shadow: 36 48 32;
+    --c-selection: 216 228 204;
+  }
+
+  /* Сумиэ — тёмная, как тушь; тёплый графит вместо чистого чёрного */
+  [data-theme='sumi'] {
+    --c-bg: 24 23 22;
+    --c-paper: 35 34 32;
+    --c-ink: 236 232 225;
+    --c-ink-soft: 178 173 164;
+    --c-ink-faint: 122 118 111;
+    --c-line: 54 52 49;
+    --c-mist: 45 43 41;
+    --c-shadow: 0 0 0;
+    --c-selection: 80 72 60;
+
+    --c-open: 206 168 101;
+    --c-open-tint: 56 48 35;
+    --c-open-ink: 226 194 136;
+    --c-acting: 140 160 188;
+    --c-acting-tint: 39 45 55;
+    --c-acting-ink: 174 192 216;
+    --c-done: 136 170 148;
+    --c-done-tint: 37 49 41;
+    --c-done-ink: 164 198 176;
+
+    --c-ho: 152 172 198;
+    --c-ho-tint: 39 45 55;
+    --c-ren: 150 186 160;
+    --c-ren-tint: 37 49 41;
+    --c-so: 208 166 150;
+    --c-so-tint: 55 42 38;
+  }
+
+  /* ─── Шрифтовые пары ───────────────────────────────────────────────
+     --font-* с суффиксом задаёт next/font в layout.tsx. Браузер скачивает
+     только те начертания, которые реально используются на странице. */
+  :root,
+  [data-font='classic'] {
+    --font-display: var(--font-cormorant), Georgia, serif;
+    --font-text: var(--font-manrope), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+  [data-font='modern'] {
+    --font-display: var(--font-manrope), -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-text: var(--font-manrope), -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+  [data-font='book'] {
+    --font-display: var(--font-pt-serif), Georgia, serif;
+    --font-text: var(--font-pt-sans), -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+  /* Системный: San Francisco + New York — без загрузки, самый быстрый на iPhone */
+  [data-font='system'] {
+    --font-display: ui-serif, 'New York', Georgia, serif;
+    --font-text: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+
   html {
     -webkit-text-size-adjust: 100%;
     -webkit-tap-highlight-color: transparent;
-    background: #f7f5f0;
+    background: rgb(var(--c-bg));
+  }
+
+  /* Тёмная тема: нативные элементы (скроллбары, автозаполнение) — тоже тёмные */
+  [data-theme='sumi'] {
+    color-scheme: dark;
   }
 
   body {
     min-height: 100vh;
     @apply bg-ivory font-sans text-ink antialiased;
+    transition: background-color 240ms ease;
     text-rendering: optimizeLegibility;
     font-feature-settings: 'kern', 'liga';
     overscroll-behavior-y: none;
@@ -48,7 +181,7 @@
   }
 
   ::selection {
-    background: #e8dfcf;
+    background: rgb(var(--c-selection));
   }
 }
 

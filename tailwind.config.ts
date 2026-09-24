@@ -2,38 +2,40 @@ import type { Config } from 'tailwindcss';
 
 // Tailwind v3 (не v4): v4 опирается на oklch, @property и color-mix,
 // которых нет в Safari 15. v3 генерирует rgb() — работает на iOS 15.
+const c = (name: string) => `rgb(var(--c-${name}) / <alpha-value>)`;
+
 const config: Config = {
   content: ['./src/**/*.{ts,tsx}'],
   theme: {
     extend: {
+      // Все цвета — CSS-переменные (rgb-триплеты), значения задаются темой
+      // в globals.css. Формат `rgb(var(--x) / a)` понимает Safari 12.1+,
+      // поэтому модификаторы прозрачности (bg-ink/30) продолжают работать.
       colors: {
-        ivory: '#F7F5F0',
-        paper: '#FFFFFF',
-        ink: {
-          DEFAULT: '#2B2A28',
-          soft: '#65625C',
-          faint: '#A39F97',
-        },
-        line: '#E9E5DD',
-        mist: '#F0EDE6',
+        ivory: c('bg'),
+        paper: c('paper'),
+        ink: { DEFAULT: c('ink'), soft: c('ink-soft'), faint: c('ink-faint') },
+        line: c('line'),
+        mist: c('mist'),
         // Статусы решения
-        open: { DEFAULT: '#C9A15B', tint: '#F6EFDF' },
-        acting: { DEFAULT: '#7F93AD', tint: '#E8EDF3' },
-        done: { DEFAULT: '#7E9C88', tint: '#E7EFE9' },
+        open: { DEFAULT: c('open'), tint: c('open-tint'), ink: c('open-ink') },
+        acting: { DEFAULT: c('acting'), tint: c('acting-tint'), ink: c('acting-ink') },
+        done: { DEFAULT: c('done'), tint: c('done-tint'), ink: c('done-ink') },
         // Типы коммуникации Хо-Рен-Со
-        ho: { DEFAULT: '#6F86A3', tint: '#EAEFF5' },
-        ren: { DEFAULT: '#7E9C88', tint: '#ECF2EE' },
-        so: { DEFAULT: '#B08676', tint: '#F5ECE8' },
+        ho: { DEFAULT: c('ho'), tint: c('ho-tint') },
+        ren: { DEFAULT: c('ren'), tint: c('ren-tint') },
+        so: { DEFAULT: c('so'), tint: c('so-tint') },
       },
       fontFamily: {
-        sans: ['var(--font-sans)', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
-        serif: ['var(--font-serif)', 'Georgia', 'Times New Roman', 'serif'],
+        // Пара шрифтов выбирается в настройках (data-font на <html>)
+        sans: ['var(--font-text)'],
+        serif: ['var(--font-display)'],
       },
       boxShadow: {
         // Мягкие статичные тени — их не анимируем (перерисовка тени дорога на A10)
-        card: '0 1px 2px rgba(43,42,40,0.04), 0 8px 24px -12px rgba(43,42,40,0.12)',
-        lift: '0 2px 4px rgba(43,42,40,0.06), 0 16px 32px -12px rgba(43,42,40,0.22)',
-        sheet: '0 -8px 32px -8px rgba(43,42,40,0.18)',
+        card: '0 1px 2px rgb(var(--c-shadow) / 0.04), 0 8px 24px -12px rgb(var(--c-shadow) / 0.12)',
+        lift: '0 2px 4px rgb(var(--c-shadow) / 0.06), 0 16px 32px -12px rgb(var(--c-shadow) / 0.22)',
+        sheet: '0 -8px 32px -8px rgb(var(--c-shadow) / 0.18)',
       },
       borderRadius: {
         xl2: '1.25rem',
