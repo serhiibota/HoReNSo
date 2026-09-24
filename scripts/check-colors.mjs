@@ -7,12 +7,24 @@
  *  - контраст `*-ink` к `*-tint` ≥ 3,5:1 (текст и иконки на подложках),
  *    у статусов ≥ 4,5:1 — прежний уровень, ниже которого не опускаемся;
  *  - контраст `ink-faint` к `bg` ≥ 3:1;
- *  - тёмные схемы: контраст `*-on` к сплошной заливке `*` ≥ 3:1.
+ *  - тёмные схемы: контраст `*-on` к сплошной заливке `*` ≥ 3:1;
+ *  - структура CSS: `:root` (схема по умолчанию) первым, каждая схема —
+ *    `:root[data-theme=…]`, иначе поздний :root перебивает выбранную схему.
  * Печатает таблицу и завершается с кодом 1 при любом нарушении.
  *
  * Данные — src/lib/themes.ts (Node ≥ 22.18 запускает .ts без сборки).
  */
-import { ACCENTS, COMM_ACCENTS, STATUS_ACCENTS, THEMES, contrast, resolveTheme, rgbDistance } from '../src/lib/themes.ts';
+import {
+  ACCENTS,
+  AUTO,
+  COMM_ACCENTS,
+  STATUS_ACCENTS,
+  THEMES,
+  buildThemeCss,
+  contrast,
+  resolveTheme,
+  rgbDistance,
+} from '../src/lib/themes.ts';
 
 export const LIMITS = { distance: 30, inkOnTint: 3.5, statusInkOnTint: 4.5, faint: 3, onFill: 3 };
 
@@ -72,8 +84,18 @@ export function printTable(rows) {
   );
 }
 
+export function checkCss(css) {
+  const errors = [];
+  if (!css.startsWith(':root{')) errors.push('CSS: блок :root должен идти первым');
+  for (const id of [...THEMES.map((t) => t.id), AUTO.id])
+    if (!css.includes(`:root[data-theme="${id}"]{`)) errors.push(`CSS: нет блока :root[data-theme="${id}"]`);
+  if (/(^|[\s}])\[data-theme=/.test(css)) errors.push('CSS: селектор [data-theme] без :root — проиграет :root по порядку');
+  return errors;
+}
+
 if (import.meta.url === `file://${process.argv[1]}`) {
   const { rows, errors } = check(THEMES.map((t) => ({ id: t.id, dark: t.dark, tokens: resolveTheme(t) })));
+  errors.push(...checkCss(buildThemeCss()));
   printTable(rows);
   if (errors.length) {
     console.error('\n✗ Нарушения:\n  ' + errors.join('\n  '));

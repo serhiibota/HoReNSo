@@ -27,27 +27,136 @@ type BaseToken = (typeof BASE_TOKENS)[number];
  * Необязательные токены. Схема без них явно сбрасывает их в `initial`,
  * а в стилях они читаются как `var(--c-x, запасной)` — иначе значение
  * из `:root` «протекло» бы в схему, которая его не задаёт.
+ * Сейчас все схемы задают полный набор, список пуст; новый токен,
+ * нужный не всем схемам, добавляется сюда.
  */
-export const OPTIONAL_TOKENS = ['hot'] as const;
-type OptionalToken = (typeof OPTIONAL_TOKENS)[number];
+export const OPTIONAL_TOKENS: readonly string[] = [];
+type OptionalToken = string;
 
-export type ThemeId = 'ivory' | 'mist' | 'sakura' | 'matcha' | 'sumi';
+export type ThemeId = 'tushe' | 'tushe-marks' | 'sumi' | 'ivory' | 'mist' | 'ai' | 'matcha';
+
+/** «Как в системе»: днём одна схема, ночью другая — через prefers-color-scheme, без JS */
+export const AUTO = { id: 'auto', light: 'tushe-marks', dark: 'sumi' } as const;
+export type ThemeChoice = ThemeId | typeof AUTO.id;
+
+/** Переименованные и удалённые схемы → их замена (для сохранённых настроек) */
+export const THEME_ALIASES: Record<string, ThemeChoice> = { sakura: 'ai' };
+
+export type ThemeGroup = 'ink' | 'color';
+export const THEME_GROUPS: { id: ThemeGroup; name: string; note: string }[] = [
+  { id: 'ink', name: 'Тушь', note: 'Монохром, киноварь — только «Требует мер»' },
+  { id: 'color', name: 'Цветные', note: 'Минеральные и земляные акценты' },
+];
 
 export interface ThemeDef {
   id: ThemeId;
   name: string;
   note: string;
+  group: ThemeGroup;
   dark: boolean;
   base: Record<BaseToken, Hex>;
   accents: Record<Accent, Hex>;
+  /**
+   * Акценты без подложки: `*-tint` = paper, цвет живёт только в точке,
+   * полоске и тексте. Так в «Туши» киноварь не превращается в розовое пятно.
+   */
+  untinted?: Accent[];
   optional?: Partial<Record<OptionalToken, Hex>>;
   /** Ручная правка вычисленного токена — только если формула не справилась */
   overrides?: Partial<Record<string, Hex>>;
 }
 
 export const THEMES: ThemeDef[] = [
+  // ─── Группа «Тушь»: единственный яркий цвет — киноварь, только для open ───
+  {
+    id: 'tushe',
+    name: 'Тушь',
+    note: 'Бумага и тушь',
+    group: 'ink',
+    dark: false,
+    base: {
+      bg: '#F4F3EF',
+      paper: '#FBFAF7',
+      ink: '#1A1A19',
+      'ink-soft': '#4D4C49',
+      'ink-faint': '#7C7B76',
+      line: '#DCDAD3',
+      mist: '#EBE9E3',
+      shadow: '#1A1A19',
+      selection: '#DDDAD2',
+    },
+    // Статусы и Хо/Рен/Со — оттенки туши
+    accents: {
+      open: '#C8432B',
+      acting: '#4A4A47',
+      done: '#8E8D88',
+      ho: '#2E2E2C',
+      ren: '#62615D',
+      so: '#96958F',
+    },
+    untinted: ['open'],
+  },
+  {
+    id: 'tushe-marks',
+    name: 'Тушь с пометками',
+    note: 'Тёмные приглушённые пометки',
+    group: 'ink',
+    dark: false,
+    base: {
+      bg: '#F4F3EF',
+      paper: '#FBFAF7',
+      ink: '#1A1A19',
+      'ink-soft': '#4D4C49',
+      'ink-faint': '#7C7B76',
+      line: '#DCDAD3',
+      mist: '#EBE9E3',
+      shadow: '#1A1A19',
+      selection: '#DDDAD2',
+    },
+    // Пометки: умбра, хвоя, индиго, олива, кирпич
+    accents: {
+      open: '#C8432B',
+      acting: '#8A6428',
+      done: '#3B6B5F',
+      ho: '#34507C',
+      ren: '#66703A',
+      so: '#9A4536',
+    },
+    untinted: ['open'],
+  },
+  {
+    // id прежней «Сумиэ» — у выбравших её схема сменится сама
+    id: 'sumi',
+    name: 'Суми',
+    note: 'Уголь, тёмная',
+    group: 'ink',
+    dark: true,
+    base: {
+      bg: '#161615',
+      paper: '#201F1D',
+      ink: '#E8E6E1',
+      'ink-soft': '#ABA8A1',
+      'ink-faint': '#85827C',
+      line: '#3A3936',
+      mist: '#2A2927',
+      shadow: '#000000',
+      selection: '#45433F',
+    },
+    // Светлые серые заливки → тёмные иконки (*-on выбирается автоматически)
+    accents: {
+      open: '#E0583D',
+      acting: '#B9B6AF',
+      done: '#7F7C76',
+      ho: '#D6D3CC',
+      ren: '#A19E97',
+      so: '#6E6B66',
+    },
+  },
+
+  // ─── Цветные ───
   {
     id: 'ivory',
+    group: 'color',
     name: 'Слоновая кость',
     note: 'Тёплая, по умолчанию',
     dark: false,
@@ -74,6 +183,7 @@ export const THEMES: ThemeDef[] = [
   },
   {
     id: 'mist',
+    group: 'color',
     name: 'Туман',
     note: 'Светло-серая, холодная',
     dark: false,
@@ -99,33 +209,35 @@ export const THEMES: ThemeDef[] = [
     },
   },
   {
-    id: 'sakura',
-    name: 'Сакура',
-    note: 'Пудровая',
+    id: 'ai',
+    name: 'Аи',
+    note: 'Индиго и хвоя',
+    group: 'color',
     dark: false,
     base: {
-      bg: '#FAF4F3',
+      bg: '#F1F2EF',
       paper: '#FFFFFF',
-      ink: '#34282A',
-      'ink-soft': '#725E61',
-      'ink-faint': '#978185',
-      line: '#F0E3E2',
-      mist: '#F5E9E8',
-      shadow: '#46282C',
-      selection: '#F2D6D6',
+      ink: '#1F2530',
+      'ink-soft': '#525A66',
+      'ink-faint': '#767D87',
+      line: '#DFE2E1',
+      mist: '#E7E9E7',
+      shadow: '#1F2530',
+      selection: '#D3DAE6',
     },
-    // Ждёт решения: удалить или переделать в земляную схему
+    // 藍 — индиго. Хвоя, умбра, охра; ничего пудрового
     accents: {
-      open: '#CEA060',
-      acting: '#8A88B0',
-      done: '#809E86',
-      ho: '#8682AC',
-      ren: '#80A088',
-      so: '#BE7A80',
+      open: '#AC873E',
+      acting: '#4F6A8E',
+      done: '#437260',
+      ho: '#3E5A86',
+      ren: '#3F6A5A',
+      so: '#8A5A3C',
     },
   },
   {
     id: 'matcha',
+    group: 'color',
     name: 'Маття',
     note: 'Травяная',
     dark: false,
@@ -148,31 +260,6 @@ export const THEMES: ThemeDef[] = [
       ho: '#3F6B55',
       ren: '#8A6746',
       so: '#6F9C88',
-    },
-  },
-  {
-    id: 'sumi',
-    name: 'Сумиэ',
-    note: 'Тёмная',
-    dark: true,
-    base: {
-      bg: '#181716',
-      paper: '#232220',
-      ink: '#ECE8E1',
-      'ink-soft': '#B2ADA4',
-      'ink-faint': '#8A857D',
-      line: '#363431',
-      mist: '#2D2B29',
-      shadow: '#000000',
-      selection: '#50483C',
-    },
-    accents: {
-      open: '#CEA865',
-      acting: '#8CA0BC',
-      done: '#88AA94',
-      ho: '#98ACC6',
-      ren: '#96BAA0',
-      so: '#D0A694',
     },
   },
 ];
@@ -256,7 +343,11 @@ export function resolveTheme(t: ThemeDef): ResolvedTheme {
   for (const a of ACCENTS) {
     const c = t.accents[a];
     out[a] = c;
-    const tint = t.dark ? mix(c, t.base.bg, FORMULA.tintDark) : mix(c, t.base.paper, FORMULA.tintLight);
+    const tint = t.untinted?.includes(a)
+      ? t.base.paper
+      : t.dark
+        ? mix(c, t.base.bg, FORMULA.tintDark)
+        : mix(c, t.base.paper, FORMULA.tintLight);
     out[`${a}-tint`] = tint;
     out[`${a}-ink`] = t.dark
       ? inkOnTint(c, '#FFFFFF', FORMULA.inkDark, tint)
@@ -275,18 +366,26 @@ export function resolveTheme(t: ThemeDef): ResolvedTheme {
 const triplet = (hex: Hex) => hexToRgb(hex).join(' ');
 
 /**
- * CSS для всех схем: `[data-theme=…]{--c-x: r g b}`. Схема по умолчанию
- * дополнительно висит на :root — страница выглядит правильно и без атрибута.
+ * CSS для всех схем: `:root[data-theme=…]{--c-x: r g b}`.
  */
+function declarations(t: ThemeDef): string {
+  const tokens = resolveTheme(t);
+  const decl = Object.entries(tokens).map(([k, v]) => `--c-${k}:${triplet(v)}`);
+  for (const k of OPTIONAL_TOKENS) if (!(k in tokens)) decl.push(`--c-${k}:initial`);
+  decl.push(`color-scheme:${t.dark ? 'dark' : 'light'}`);
+  return decl.join(';');
+}
+
+export const themeById = (id: ThemeId): ThemeDef => THEMES.find((t) => t.id === id)!;
+
 export function buildThemeCss(themes: ThemeDef[] = THEMES): string {
-  return themes
-    .map((t) => {
-      const tokens = resolveTheme(t);
-      const decl = Object.entries(tokens).map(([k, v]) => `--c-${k}:${triplet(v)}`);
-      for (const k of OPTIONAL_TOKENS) if (!(k in tokens)) decl.push(`--c-${k}:initial`);
-      if (t.dark) decl.push('color-scheme:dark');
-      const sel = t.id === DEFAULT_THEME ? `:root,[data-theme="${t.id}"]` : `[data-theme="${t.id}"]`;
-      return `${sel}{${decl.join(';')}}`;
-    })
-    .join('\n');
+  // :root — схема по умолчанию (страница верна и без атрибута). Схемы идут
+  // с селектором :root[data-theme] — он специфичнее :root, поэтому порядок
+  // блоков не важен и :root никогда не перебьёт выбранную схему.
+  const blocks = [`:root{${declarations(themeById(DEFAULT_THEME))}}`];
+  for (const t of themes) blocks.push(`:root[data-theme="${t.id}"]{${declarations(t)}}`);
+  // «Как в системе» — чистый CSS, переключается вместе с ОС без JS
+  blocks.push(`:root[data-theme="${AUTO.id}"]{${declarations(themeById(AUTO.light))}}`);
+  blocks.push(`@media (prefers-color-scheme: dark){:root[data-theme="${AUTO.id}"]{${declarations(themeById(AUTO.dark))}}}`);
+  return blocks.join('\n');
 }

@@ -1,6 +1,6 @@
-import { THEMES, type ThemeDef } from './themes';
+import { AUTO, THEMES, THEME_ALIASES, themeById, type ThemeChoice, type ThemeDef } from './themes';
 
-export { DEFAULT_THEME, THEMES, type ThemeDef, type ThemeId } from './themes';
+export { DEFAULT_THEME, THEMES, type ThemeChoice, type ThemeDef, type ThemeId } from './themes';
 
 export type FontId = 'classic' | 'modern' | 'book' | 'system';
 
@@ -8,6 +8,28 @@ export const PREFS_KEY = 'horenso:prefs';
 
 /** Цвет панели Safari (meta theme-color) — фон схемы */
 export const themeMeta = (t: ThemeDef) => t.base.bg;
+
+/**
+ * theme-color для светлой и тёмной системной темы: в layout два <meta> с media.
+ * У обычной схемы оба одинаковые, у «Как в системе» — свои для дня и ночи.
+ */
+export const THEME_COLORS = {
+  ...Object.fromEntries(THEMES.map((t) => [t.id, [themeMeta(t), themeMeta(t)]])),
+  [AUTO.id]: [themeMeta(themeById(AUTO.light)), themeMeta(themeById(AUTO.dark))],
+} as Record<ThemeChoice, [string, string]>;
+
+/** Сохранённый выбор → актуальная схема (переименованные подменяются, неизвестные — null) */
+export function normalizeTheme(v: unknown): ThemeChoice | null {
+  const id = typeof v === 'string' ? (THEME_ALIASES[v] ?? v) : '';
+  return id in THEME_COLORS ? (id as ThemeChoice) : null;
+}
+
+export function applyThemeColor(choice: ThemeChoice) {
+  const [light, dark] = THEME_COLORS[choice];
+  document.querySelectorAll('meta[name="theme-color"]').forEach((m) => {
+    m.setAttribute('content', (m.getAttribute('media') || '').includes('dark') ? dark : light);
+  });
+}
 
 export interface FontDef {
   id: FontId;
@@ -57,5 +79,5 @@ export const DEFAULT_FONT: FontId = 'classic';
  * что и zustand persist (формат { state: {...}, version }).
  */
 export const APPEARANCE_BOOT_SCRIPT = `(function(){try{var s=JSON.parse(localStorage.getItem('${PREFS_KEY}')||'{}').state||{};var d=document.documentElement;var m=${JSON.stringify(
-  Object.fromEntries(THEMES.map((t) => [t.id, themeMeta(t)])),
-)};if(m[s.theme]){d.setAttribute('data-theme',s.theme);var e=document.querySelector('meta[name="theme-color"]');if(e)e.setAttribute('content',m[s.theme]);}if(s.font)d.setAttribute('data-font',s.font);}catch(e){}})();`;
+  THEME_COLORS,
+)};var a=${JSON.stringify(THEME_ALIASES)};var t=a[s.theme]||s.theme;if(m[t]){d.setAttribute('data-theme',t);var e=document.querySelectorAll('meta[name="theme-color"]');for(var i=0;i<e.length;i++){e[i].setAttribute('content',m[t][(e[i].getAttribute('media')||'').indexOf('dark')>-1?1:0]);}}if(s.font)d.setAttribute('data-font',s.font);}catch(e){}})();`;

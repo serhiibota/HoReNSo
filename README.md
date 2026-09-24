@@ -16,6 +16,7 @@ npm install
 npm run dev        # http://localhost:3000
 npm run build      # статическая сборка в out/
 npm start          # раздать out/ локально
+npm run check:colors  # проверка цветовых схем (перед коммитом)
 ```
 
 Проверить на iPhone в одной сети: `npm run dev -- -H 0.0.0.0`, открыть

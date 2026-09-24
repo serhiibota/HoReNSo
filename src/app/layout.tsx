@@ -61,7 +61,12 @@ export const viewport: Viewport = {
   initialScale: 1,
   // viewport-fit=cover включает env(safe-area-inset-*)
   viewportFit: 'cover',
-  themeColor: '#F7F5F0',
+  // Два тега: для «Как в системе» день и ночь различаются; значения
+  // подставляет скрипт в <head> по выбранной схеме
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#F7F5F0' },
+    { media: '(prefers-color-scheme: dark)', color: '#F7F5F0' },
+  ],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -114,7 +114,10 @@ function StatusPicker({ entry, onChange }: { entry: Entry; onChange: (s: Entry['
             aria-pressed={active}
             className={
               'pressable flex flex-col items-start rounded-2xl px-3 py-3 text-left transition-colors duration-200 ' +
-              (active ? m.tint + ' ' + m.text : 'bg-paper text-ink-soft shadow-card')
+              (active
+                ? // Тонкая рамка цветом статуса: видна и там, где подложки нет (киноварь в «Туши»)
+                  m.tint + ' ' + m.text + ' shadow-card ring-1 ring-inset ring-current'
+                : 'bg-paper text-ink-soft shadow-card')
             }
           >
             <span className={'h-2 w-2 rounded-full ' + (active ? m.dot : 'bg-line')} />

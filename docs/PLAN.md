@@ -49,16 +49,12 @@
 - Без `crypto.randomUUID`, `Array.at`, `structuredClone`, `<dialog>` — их нет в iOS 15.0–15.3.
 
 ## Шаг 7. Оформление (сделано)
-- Шторка «Оформление» (кнопка с ползунками в ленте): 5 цветовых схем —
-  Слоновая кость, Туман, Сакура, Маття, Сумиэ (тёмная) — и 4 пары шрифтов:
-  Классика (Cormorant + Manrope), Современный (Manrope), Книжный (PT Serif + PT Sans),
-  Системный (San Francisco + New York, без загрузки).
-- Все цвета — CSS-переменные (`--c-*`, rgb-триплеты) в `globals.css`;
-  тема и шрифт переключаются атрибутами `data-theme` / `data-font` на `<html>`,
-  React ничего не перерисовывает.
-- Выбор хранится в `localStorage` (`horenso:prefs`) и применяется inline-скриптом
-  в `<head>` до первой отрисовки — без вспышки темы по умолчанию. Там же
-  обновляется `theme-color` для панели Safari.
+- Шторка «Оформление»: группы «Тушь» (Тушь, Тушь с пометками, Суми, Как в системе)
+  и «Цветные» (Слоновая кость, Туман, Аи, Маття) + 4 пары шрифтов.
+- Цвета — единый источник `src/lib/themes.ts`, CSS генерируется `buildThemeCss()`.
+  Принципы и проверка — [COLOR-SCHEMES.md](COLOR-SCHEMES.md), `npm run check:colors`.
+- Выбор хранится в `localStorage` (`horenso:prefs`) и применяется скриптом
+  в `<head>` до первой отрисовки, там же обновляется `theme-color`.
 
 ## Шаг 8. Дальше (идеи)
 - Поиск по записям, экспорт/импорт JSON (резервная копия localStorage).
@@ -93,7 +89,8 @@ src/
 │   ├── Fab.tsx, TopBar.tsx, StatusBadge.tsx, icons.tsx
 ├── lib/
 │   ├── types.ts, fields.ts # модель и тексты полей/статусов
-│   ├── appearance.ts       # список тем/шрифтов, скрипт до гидрации
+│   ├── themes.ts           # схемы (HEX), формулы подложек, buildThemeCss
+│   ├── appearance.ts       # шрифты, theme-color, скрипт до гидрации
 │   ├── summary.ts          # генерация текстового резюме
 │   ├── share.ts            # clipboard + Web Share API с фолбэками
 │   ├── format.ts, id.ts, nav.ts
