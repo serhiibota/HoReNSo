@@ -1,4 +1,4 @@
-import type { CommType, EntryStatus, FactKey, Facts, ThoughtKey, Thoughts } from './types';
+import type { CommType, EntryMode, EntryStatus, FactKey, Facts, SelfKey, SelfNotes, ThoughtKey, Thoughts, Verdict } from './types';
 
 export interface FieldDef<K extends string> {
   key: K;
@@ -66,6 +66,55 @@ export const THOUGHT_FIELDS: FieldDef<ThoughtKey>[] = [
     placeholder: 'Стоит ли предлагать клиенту скидку?',
   },
 ];
+
+/**
+ * «Что я думаю» в режиме самопроверки. Первое поле — общее с Хо-Рен-Со
+ * (thoughts.understanding), остальные — вопросы к собственной версии.
+ * Уверенность (шкала 0–100 %) рисуется между «чувствами» и «проверкой».
+ */
+export const SELF_VERSION_FIELD: FieldDef<'understanding'> = {
+  key: 'understanding',
+  label: 'Моя версия',
+  hint: 'Как я объясняю то, что увидел?',
+  placeholder: 'Коллега не ответил, потому что игнорирует меня…',
+};
+
+export const SELF_FIELDS: FieldDef<SelfKey>[] = [
+  {
+    key: 'alternatives',
+    label: 'Какие ещё объяснения возможны?',
+    hint: 'Хотя бы два других',
+    placeholder: 'Был на встрече; не увидел сообщение; ждёт данных от других…',
+  },
+  {
+    key: 'feelings',
+    label: 'Что я чувствую?',
+    hint: 'Эмоция окрашивает то, что я «вижу»',
+    placeholder: 'Раздражение, тревога',
+  },
+  {
+    key: 'verify',
+    label: 'Как проверить свою версию?',
+    hint: 'Какой факт подтвердит или опровергнет её',
+    placeholder: 'Спросить напрямую, когда будет ответ',
+  },
+];
+
+export const emptySelf = (): SelfNotes => ({ alternatives: '', feelings: '', verify: '' });
+
+export const MODE_META: Record<EntryMode, { label: string; title: string; note: string }> = {
+  self: { label: 'Для себя', title: 'Самопроверка', note: 'Отделить увиденное от додуманного' },
+  team: { label: 'Для команды', title: 'Хо-Рен-Со', note: 'Сообщить, информировать, посоветоваться' },
+};
+
+export const VERDICT_META: Record<Verdict, { label: string; dot: string; tint: string; text: string }> = {
+  unclear: { label: 'Пока неясно', dot: 'bg-ink-faint', tint: 'bg-mist', text: 'text-ink-soft' },
+  confirmed: { label: 'Подтвердилось', dot: 'bg-done', tint: 'bg-done-tint', text: 'text-done-ink' },
+  // Цвет «Со», а не статуса: иначе в ленте совпадает с «Меры приняты»
+  refuted: { label: 'Не подтвердилось', dot: 'bg-so', tint: 'bg-so-tint', text: 'text-so-ink' },
+};
+
+export const VERDICT_ORDER: Verdict[] = ['unclear', 'confirmed', 'refuted'];
 
 export const emptyFacts = (): Facts => ({ what: '', who: '', whereWhen: '', evidence: '' });
 export const emptyThoughts = (): Thoughts => ({

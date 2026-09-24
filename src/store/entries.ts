@@ -2,50 +2,82 @@
 
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
-import { emptyFacts, emptyThoughts } from '@/lib/fields';
+import { emptyFacts, emptySelf, emptyThoughts } from '@/lib/fields';
 import { hasText } from '@/lib/format';
 import { createId } from '@/lib/id';
-import type { CommType, Draft, Entry, EntryStatus, FactKey, ThoughtKey } from '@/lib/types';
+import type { CommType, Draft, Entry, EntryMode, EntryStatus, FactKey, SelfKey, ThoughtKey, Verdict } from '@/lib/types';
 
 interface EntriesState {
   entries: Entry[];
   /** Черновик переживает перезагрузку вкладки — Safari на iOS любит выгружать фоновые вкладки */
   draft: Draft;
+  /** Режим последней сохранённой записи — с него начинается новая */
+  lastMode: EntryMode;
 
   startNew: () => void;
   startEdit: (id: string) => void;
   setFact: (key: FactKey, value: string) => void;
   setThought: (key: ThoughtKey, value: string) => void;
+  setDraftMode: (mode: EntryMode) => void;
+  setSelf: (key: SelfKey, value: string) => void;
+  setConfidence: (value: number | null) => void;
   /** Сохраняет черновик и возвращает id записи (или null, если черновик пуст) */
   saveDraft: () => string | null;
   discardDraft: () => void;
 
   setStatus: (id: string, status: EntryStatus) => void;
   logComm: (id: string, type: CommType) => void;
+  setVerdict: (id: string, verdict: Verdict) => void;
+  setConclusion: (id: string, text: string) => void;
+  /** Мостик: самопроверка → Хо-Рен-Со, с сохранением фактов и мыслей */
+  toTeam: (id: string) => void;
   remove: (id: string) => void;
 }
 
-const emptyDraft = (): Draft => ({ editingId: null, facts: emptyFacts(), thoughts: emptyThoughts() });
+const emptyDraft = (mode: EntryMode = 'team'): Draft => ({
+  editingId: null,
+  mode,
+  facts: emptyFacts(),
+  thoughts: emptyThoughts(),
+  self: emptySelf(),
+  confidence: null,
+});
 
 export const isDraftEmpty = (d: Draft) =>
-  !Object.values(d.facts).some(hasText) && !Object.values(d.thoughts).some(hasText);
+  !Object.values(d.facts).some(hasText) &&
+  !Object.values(d.thoughts).some(hasText) &&
+  !Object.values(d.self).some(hasText);
+
+const patch = (entries: Entry[], id: string, fn: (e: Entry) => Partial<Entry>) =>
+  entries.map((e) => (e.id === id ? { ...e, ...fn(e), updatedAt: Date.now() } : e));
 
 export const useEntries = create<EntriesState>()(
   persist(
     (set, get) => ({
       entries: [],
       draft: emptyDraft(),
+      lastMode: 'team',
 
       startNew: () => {
         // Не затираем начатый черновик новой записи
-        if (get().draft.editingId !== null) set({ draft: emptyDraft() });
+        if (get().draft.editingId !== null) set({ draft: emptyDraft(get().lastMode) });
+        else if (isDraftEmpty(get().draft)) set((s) => ({ draft: { ...s.draft, mode: s.lastMode } }));
       },
 
       startEdit: (id) => {
         const entry = get().entries.find((e) => e.id === id);
         if (!entry) return;
         if (get().draft.editingId === id) return;
-        set({ draft: { editingId: id, facts: { ...entry.facts }, thoughts: { ...entry.thoughts } } });
+        set({
+          draft: {
+            editingId: id,
+            mode: entry.mode,
+            facts: { ...entry.facts },
+            thoughts: { ...entry.thoughts },
+            self: { ...entry.self },
+            confidence: entry.confidence,
+          },
+        });
       },
 
       setFact: (key, value) =>
@@ -53,6 +85,12 @@ export const useEntries = create<EntriesState>()(
 
       setThought: (key, value) =>
         set((s) => ({ draft: { ...s.draft, thoughts: { ...s.draft.thoughts, [key]: value } } })),
+
+      setDraftMode: (mode) => set((s) => ({ draft: { ...s.draft, mode } })),
+
+      setSelf: (key, value) => set((s) => ({ draft: { ...s.draft, self: { ...s.draft.self, [key]: value } } })),
+
+      setConfidence: (value) => set((s) => ({ draft: { ...s.draft, confidence: value } })),
 
       saveDraft: () => {
         const { draft, entries } = get();
@@ -62,10 +100,15 @@ export const useEntries = create<EntriesState>()(
         if (draft.editingId) {
           const id = draft.editingId;
           set({
-            entries: entries.map((e) =>
-              e.id === id ? { ...e, facts: draft.facts, thoughts: draft.thoughts, updatedAt: now } : e,
-            ),
-            draft: emptyDraft(),
+            entries: patch(entries, id, () => ({
+              mode: draft.mode,
+              facts: draft.facts,
+              thoughts: draft.thoughts,
+              self: draft.self,
+              confidence: draft.confidence,
+            })),
+            draft: emptyDraft(draft.mode),
+            lastMode: draft.mode,
           });
           return id;
         }
@@ -74,21 +117,29 @@ export const useEntries = create<EntriesState>()(
           id: createId(),
           createdAt: now,
           updatedAt: now,
+          mode: draft.mode,
           facts: draft.facts,
           thoughts: draft.thoughts,
           status: 'open',
           comms: [],
+          self: draft.self,
+          confidence: draft.confidence,
+          conclusion: '',
+          verdict: 'unclear',
         };
-        set({ entries: [entry, ...entries], draft: emptyDraft() });
+        set({ entries: [entry, ...entries], draft: emptyDraft(draft.mode), lastMode: draft.mode });
         return entry.id;
       },
 
-      discardDraft: () => set({ draft: emptyDraft() }),
+      discardDraft: () => set((s) => ({ draft: emptyDraft(s.lastMode) })),
 
-      setStatus: (id, status) =>
-        set((s) => ({
-          entries: s.entries.map((e) => (e.id === id ? { ...e, status, updatedAt: Date.now() } : e)),
-        })),
+      setStatus: (id, status) => set((s) => ({ entries: patch(s.entries, id, () => ({ status })) })),
+
+      setVerdict: (id, verdict) => set((s) => ({ entries: patch(s.entries, id, () => ({ verdict })) })),
+
+      setConclusion: (id, conclusion) => set((s) => ({ entries: patch(s.entries, id, () => ({ conclusion })) })),
+
+      toTeam: (id) => set((s) => ({ entries: patch(s.entries, id, () => ({ mode: 'team', status: 'open' })) })),
 
       logComm: (id, type) =>
         set((s) => ({
@@ -101,9 +152,26 @@ export const useEntries = create<EntriesState>()(
     }),
     {
       name: 'horenso:v1',
-      version: 1,
+      version: 2,
       storage: createJSONStorage(() => localStorage),
-      partialize: (s) => ({ entries: s.entries, draft: s.draft }),
+      partialize: (s) => ({ entries: s.entries, draft: s.draft, lastMode: s.lastMode }),
+      // v2: режим самопроверки. Старые записи — «для команды», новые поля пустые
+      migrate: (persisted) => {
+        const p = (persisted ?? {}) as { entries?: Partial<Entry>[]; draft?: Partial<Draft> };
+        const entries = (p.entries ?? []).map(
+          (e) =>
+            ({
+              mode: 'team',
+              self: emptySelf(),
+              confidence: null,
+              conclusion: '',
+              verdict: 'unclear',
+              ...e,
+            }) as Entry,
+        );
+        const draft = { ...emptyDraft(), ...(p.draft ?? {}) } as Draft;
+        return { entries, draft, lastMode: 'team' } as unknown as EntriesState;
+      },
       // Гидрация вручную после монтирования — иначе расхождение SSR/клиент
       skipHydration: true,
     },

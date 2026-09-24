@@ -3,12 +3,15 @@
 import { useEffect, useRef, useState, type FocusEvent, type TouchEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { goBack } from '@/lib/nav';
-import { FACT_FIELDS, THOUGHT_FIELDS } from '@/lib/fields';
+import { FACT_FIELDS, SELF_FIELDS, SELF_VERSION_FIELD, THOUGHT_FIELDS } from '@/lib/fields';
 import { hasText } from '@/lib/format';
 import { isDraftEmpty, useEntries } from '@/store/entries';
+import { ConfidenceCard } from './ConfidenceCard';
 import { FieldList } from './FieldList';
 import { HelpSheet } from './HelpSheet';
 import { IconBack, IconQuestion } from './icons';
+import { MarkerHints } from './MarkerHints';
+import { ModeSwitch } from './ModeSwitch';
 import { SegmentedControl } from './SegmentedControl';
 import { IconButton, TopBar } from './TopBar';
 
@@ -21,6 +24,9 @@ export function EntryForm({ editId }: { editId: string | null }) {
   const draft = useEntries((s) => s.draft);
   const setFact = useEntries((s) => s.setFact);
   const setThought = useEntries((s) => s.setThought);
+  const setSelf = useEntries((s) => s.setSelf);
+  const setConfidence = useEntries((s) => s.setConfidence);
+  const setDraftMode = useEntries((s) => s.setDraftMode);
   const saveDraft = useEntries((s) => s.saveDraft);
   const discardDraft = useEntries((s) => s.discardDraft);
 
@@ -81,7 +87,14 @@ export function EntryForm({ editId }: { editId: string | null }) {
   useEffect(() => () => clearTimeout(blurTimer.current), []);
 
   const factsFilled = FACT_FIELDS.filter((f) => hasText(draft.facts[f.key])).length;
-  const thoughtsFilled = THOUGHT_FIELDS.filter((f) => hasText(draft.thoughts[f.key])).length;
+  const self = draft.mode === 'self';
+  // В самопроверке «анализ» — версия, три вопроса и шкала уверенности
+  const thoughtsTotal = self ? SELF_FIELDS.length + 2 : THOUGHT_FIELDS.length;
+  const thoughtsFilled = self
+    ? Number(hasText(draft.thoughts.understanding)) +
+      SELF_FIELDS.filter((f) => hasText(draft.self[f.key])).length +
+      Number(draft.confidence !== null)
+    : THOUGHT_FIELDS.filter((f) => hasText(draft.thoughts[f.key])).length;
   const empty = isDraftEmpty(draft);
 
   const save = () => {
@@ -120,11 +133,13 @@ export function EntryForm({ editId }: { editId: string | null }) {
         onFocus={onFieldFocus}
         onBlur={onFieldBlur}
       >
-        <div ref={topRef} className="lg:hidden">
+        <ModeSwitch value={draft.mode} onChange={setDraftMode} />
+
+        <div ref={topRef} className="mt-4 lg:hidden">
           <SegmentedControl
             options={[
               { value: 'see', label: 'Что я вижу', sub: `факты · ${factsFilled}/${FACT_FIELDS.length}` },
-              { value: 'think', label: 'Что я думаю', sub: `анализ · ${thoughtsFilled}/${THOUGHT_FIELDS.length}` },
+              { value: 'think', label: 'Что я думаю', sub: `${self ? 'проверка' : 'анализ'} · ${thoughtsFilled}/${thoughtsTotal}` },
             ]}
             value={tab}
             onChange={switchTo}
@@ -144,18 +159,51 @@ export function EntryForm({ editId }: { editId: string | null }) {
               <PaneHeader
                 kicker="Блок 1"
                 title="Что я вижу"
-                text="Зафиксируйте факты как они есть — без оценок и выводов."
+                text={
+                  self
+                    ? 'Только то, что можно увидеть или услышать. Слова-выводы подсвечу ниже.'
+                    : 'Зафиксируйте факты как они есть — без оценок и выводов.'
+                }
               />
-              <FieldList idPrefix="fact" fields={FACT_FIELDS} values={draft.facts} onChange={setFact} />
+              <FieldList
+                idPrefix="fact"
+                fields={FACT_FIELDS}
+                values={draft.facts}
+                onChange={setFact}
+                renderAfter={self ? (_, v) => <MarkerHints text={v} /> : undefined}
+              />
             </section>
 
             <section className={paneClass('think')}>
               <PaneHeader
                 kicker="Блок 2"
                 title="Что я думаю"
-                text="Теперь — интерпретация: смысл, возможности, риски и следующий шаг."
+                text={
+                  self
+                    ? 'Моя версия — лишь одна из возможных. Проверим её на прочность.'
+                    : 'Теперь — интерпретация: смысл, возможности, риски и следующий шаг.'
+                }
               />
-              <FieldList idPrefix="thought" fields={THOUGHT_FIELDS} values={draft.thoughts} onChange={setThought} />
+              {self ? (
+                <div className="space-y-4">
+                  <FieldList
+                    idPrefix="self"
+                    fields={[SELF_VERSION_FIELD, ...SELF_FIELDS.slice(0, 2)]}
+                    values={{ understanding: draft.thoughts.understanding, ...draft.self }}
+                    onChange={(k, v) => (k === 'understanding' ? setThought(k, v) : setSelf(k, v))}
+                  />
+                  <ConfidenceCard index={4} value={draft.confidence} onChange={setConfidence} />
+                  <FieldList
+                    idPrefix="self"
+                    fields={SELF_FIELDS.slice(2)}
+                    values={draft.self}
+                    onChange={setSelf}
+                    startIndex={4}
+                  />
+                </div>
+              ) : (
+                <FieldList idPrefix="thought" fields={THOUGHT_FIELDS} values={draft.thoughts} onChange={setThought} />
+              )}
             </section>
           </div>
         </div>
